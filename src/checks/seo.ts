@@ -22,6 +22,9 @@ export async function runSeoChecks(dir: string, project: ProjectInfo): Promise<I
   let hasOgTitle = false;
   let hasOgDesc = false;
   let hasFavicon = false;
+  let hasCanonical = false;
+  let hasLangAttr = false;
+  let hasCharset = false;
   const missingAlt: string[] = [];
 
   for (const file of htmlFiles) {
@@ -36,6 +39,9 @@ export async function runSeoChecks(dir: string, project: ProjectInfo): Promise<I
     if (/meta\s+[^>]*property\s*=\s*["']og:title["']/i.test(content)) hasOgTitle = true;
     if (/meta\s+[^>]*property\s*=\s*["']og:description["']/i.test(content)) hasOgDesc = true;
     if (/rel\s*=\s*["'](?:shortcut )?icon["']/i.test(content) || /favicon/i.test(content)) hasFavicon = true;
+    if (/rel\s*=\s*["']canonical["']/i.test(content)) hasCanonical = true;
+    if (/<html[^>]*\slang\s*=\s*["'][^"']+["']/i.test(content)) hasLangAttr = true;
+    if (/meta\s+[^>]*charset\s*=\s*["'][^"']+["']/i.test(content) || /<meta\s+charset\s*=\s*["'][^"']+["']/i.test(content)) hasCharset = true;
 
     // Check images without alt
     const imgMatches = content.matchAll(/<img\s[^>]*?>/gi);
@@ -61,6 +67,9 @@ export async function runSeoChecks(dir: string, project: ProjectInfo): Promise<I
       if (/property\s*[:=]\s*["']og:image["']/i.test(content)) hasOgImage = true;
       if (/property\s*[:=]\s*["']og:title["']/i.test(content)) hasOgTitle = true;
       if (/property\s*[:=]\s*["']og:description["']/i.test(content)) hasOgDesc = true;
+      if (/rel\s*[:=]\s*["']canonical["']/i.test(content)) hasCanonical = true;
+      if (/lang\s*[:=]\s*["'][^"']+["']/i.test(content) && /<html/i.test(content)) hasLangAttr = true;
+      if (/charset/i.test(content)) hasCharset = true;
     }
   }
 
@@ -116,6 +125,33 @@ export async function runSeoChecks(dir: string, project: ProjectInfo): Promise<I
       category: 'SEO',
       title: `${missingAlt.length} image(s) missing alt attribute`,
       detail: preview + extra,
+    });
+  }
+
+  if (!hasCanonical) {
+    issues.push({
+      severity: 'MEDIUM',
+      category: 'SEO',
+      title: 'Missing canonical URL',
+      detail: 'Add <link rel="canonical" href="..."> to prevent duplicate content issues',
+    });
+  }
+
+  if (!hasLangAttr) {
+    issues.push({
+      severity: 'MEDIUM',
+      category: 'SEO',
+      title: 'Missing lang attribute on <html>',
+      detail: 'Add <html lang="en"> (or appropriate language) for accessibility and SEO',
+    });
+  }
+
+  if (!hasCharset) {
+    issues.push({
+      severity: 'HIGH',
+      category: 'SEO',
+      title: 'Missing charset declaration',
+      detail: 'Add <meta charset="utf-8"> to prevent character encoding issues',
     });
   }
 

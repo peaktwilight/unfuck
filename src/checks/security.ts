@@ -135,5 +135,101 @@ export async function runSecurityChecks(dir: string, project: ProjectInfo): Prom
     }
   }
 
+  // Check for exposed source maps in dist/build/public directories
+  const mapFiles = await glob('**/*.map', { cwd: dir, ignore: ['**/node_modules/**', '**/.git/**'] });
+  const exposedMaps = mapFiles.filter(f => /^(dist|build|public|out|\.next)\//i.test(f));
+  if (exposedMaps.length > 0) {
+    const preview = exposedMaps.slice(0, 5).join(', ');
+    const extra = exposedMaps.length > 5 ? `, ... (${exposedMaps.length} total)` : '';
+    issues.push({
+      severity: 'HIGH',
+      category: 'Security',
+      title: `${exposedMaps.length} exposed source map${exposedMaps.length === 1 ? '' : 's'}`,
+      detail: `Source maps in output directories leak your source code — ${preview}${extra}`,
+    });
+  }
+
+  // Check for exposed .git directory in public/dist folders
+  const publicGitDirs = await glob('{public,dist,build,out}/.git*', { cwd: dir, dot: true });
+  if (publicGitDirs.length > 0) {
+    issues.push({
+      severity: 'CRITICAL',
+      category: 'Security',
+      title: 'Exposed .git directory in public/dist folder',
+      detail: `${publicGitDirs.join(', ')} — attackers can download your entire repo history`,
+    });
+  }
+
+  // Check for Math.random() in security contexts
+  const weakCryptoUsages: string[] = [];
+  for (const file of sourceFiles) {
+    let content: string;
+    try {
+      content = await readFile(join(dir, file), 'utf8');
+    } catch { continue; }
+
+    const lines = content.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+      if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) continue;
+
+      if (/Math\.random\s*\(\)/.test(line)) {
+        // Check if it's in a security-ish context
+        if (/token|secret|hash|uuid|key|password|nonce|salt|session|auth/i.test(line) ||
+            /token|secret|hash|uuid|key|password|nonce|salt|session|auth/i.test(lines[Math.max(0, i - 1)] || '') ||
+            /generate.*id|random.*id|unique.*id/i.test(line)) {
+          weakCryptoUsages.push(`${file}:${i + 1}`);
+        }
+      }
+    }
+  }
+
+  if (weakCryptoUsages.length > 0) {
+    const preview = weakCryptoUsages.slice(0, 5).join(', ');
+    const extra = weakCryptoUsages.length > 5 ? `, ... (${weakCryptoUsages.length} total)` : '';
+    issues.push({
+      severity: 'CRITICAL',
+      category: 'Security',
+      title: `Math.random() used in security context`,
+      detail: `Math.random() is not cryptographically secure — use crypto.randomUUID() or crypto.getRandomValues() instead — ${preview}${extra}`,
+    });
+  }
+
+  // Check for hardcoded localhost/127.0.0.1 URLs
+  const localhostUrls: string[] = [];
+  for (const file of sourceFiles) {
+    let content: string;
+    try {
+      content = await readFile(join(dir, file), 'utf8');
+    } catch { continue; }
+
+    const lines = content.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+      if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) continue;
+
+      if (/["'`](https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?[^"'`]*)["'`]/.test(line)) {
+        // Skip if it's in a dev/test config, env fallback, or conditional
+        if (!/process\.env|\.env|isDev|NODE_ENV|development/.test(line) &&
+            !/\.config\.|\.test\.|\.spec\./.test(file)) {
+          localhostUrls.push(`${file}:${i + 1}`);
+        }
+      }
+    }
+  }
+
+  if (localhostUrls.length > 0) {
+    const preview = localhostUrls.slice(0, 5).join(', ');
+    const extra = localhostUrls.length > 5 ? `, ... (${localhostUrls.length} total)` : '';
+    issues.push({
+      severity: 'HIGH',
+      category: 'Security',
+      title: `${localhostUrls.length} hardcoded localhost URL${localhostUrls.length === 1 ? '' : 's'}`,
+      detail: `These will break in production — use environment variables instead — ${preview}${extra}`,
+    });
+  }
+
   return issues;
 }

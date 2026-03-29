@@ -1,4 +1,4 @@
-import { readFile, access } from 'fs/promises';
+import { readFile, access, stat } from 'fs/promises';
 import { join } from 'path';
 import { glob } from 'glob';
 import type { Issue, ProjectInfo } from '../types.js';
@@ -152,6 +152,88 @@ export async function runProductionChecks(dir: string, project: ProjectInfo): Pr
       category: 'Production',
       title: `${envNoFallback.length} process.env usage${envNoFallback.length === 1 ? '' : 's'} without fallback`,
       detail: `No default value or validation — ${preview}${extra}`,
+    });
+  }
+
+  // Check for CI/CD config
+  let hasCiCd = false;
+  const ciPaths = [
+    '.github/workflows',
+    '.gitlab-ci.yml',
+    '.circleci',
+    'Jenkinsfile',
+    '.travis.yml',
+    'bitbucket-pipelines.yml',
+    'azure-pipelines.yml',
+    '.drone.yml',
+  ];
+  for (const ciPath of ciPaths) {
+    try {
+      await stat(join(dir, ciPath));
+      hasCiCd = true;
+      break;
+    } catch {}
+  }
+  if (!hasCiCd) {
+    issues.push({
+      severity: 'MEDIUM',
+      category: 'Production',
+      title: 'No CI/CD configuration found',
+      detail: 'No .github/workflows/, .gitlab-ci.yml, or similar — set up automated testing and deployment',
+    });
+  }
+
+  // Check for README
+  let hasReadme = false;
+  const readmePatterns = ['README.md', 'README', 'readme.md', 'Readme.md', 'README.txt'];
+  for (const name of readmePatterns) {
+    try {
+      await access(join(dir, name));
+      hasReadme = true;
+      break;
+    } catch {}
+  }
+  if (!hasReadme) {
+    issues.push({
+      severity: 'MEDIUM',
+      category: 'Production',
+      title: 'No README found',
+      detail: 'Every project needs a README — how will anyone know what this does?',
+    });
+  }
+
+  // Check for test files
+  const testFiles = await glob('**/*.{test,spec}.{js,ts,jsx,tsx,mjs,cjs}', { cwd: dir, ignore: IGNORE });
+  const testDirs = await glob('**/__tests__/**/*.{js,ts,jsx,tsx}', { cwd: dir, ignore: IGNORE });
+  if (testFiles.length === 0 && testDirs.length === 0) {
+    issues.push({
+      severity: 'HIGH',
+      category: 'Production',
+      title: 'No tests found',
+      detail: 'No *.test.*, *.spec.*, or __tests__/ files — you are deploying without a safety net',
+    });
+  }
+
+  // Bundle size check — flag if too many dependencies
+  if (pkg) {
+    const depCount = Object.keys(pkg.dependencies || {}).length;
+    if (depCount > 30) {
+      issues.push({
+        severity: 'MEDIUM',
+        category: 'Production',
+        title: `${depCount} production dependencies`,
+        detail: `package.json has ${depCount} dependencies (>30) — review if all are needed, bundle size may be bloated`,
+      });
+    }
+  }
+
+  // Check for start or dev script
+  if (pkg && !pkg.scripts?.start && !pkg.scripts?.dev) {
+    issues.push({
+      severity: 'MEDIUM',
+      category: 'Production',
+      title: 'No start or dev script in package.json',
+      detail: 'Add a "start" or "dev" script so the project can be run easily',
     });
   }
 

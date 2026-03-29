@@ -1,5 +1,5 @@
 import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { join, basename } from 'path';
 import { glob } from 'glob';
 import type { Issue, ProjectInfo } from '../types.js';
 
@@ -122,6 +122,110 @@ export async function runQualityChecks(dir: string, project: ProjectInfo): Promi
       title: `${anyTypes.length} \`any\` type usage${anyTypes.length === 1 ? '' : 's'} in TypeScript`,
       detail: preview + extra,
     });
+  }
+
+  // Duplicate file name detection (files with identical names in different directories)
+  const filesByName = new Map<string, string[]>();
+  for (const file of sourceFiles) {
+    const name = basename(file);
+    // Skip index files and common generic names
+    if (/^index\.(js|ts|jsx|tsx|mjs|cjs)$/.test(name)) continue;
+    const existing = filesByName.get(name) || [];
+    existing.push(file);
+    filesByName.set(name, existing);
+  }
+  const duplicates = [...filesByName.entries()].filter(([, files]) => files.length > 1);
+  if (duplicates.length > 0) {
+    const preview = duplicates.slice(0, 3).map(([name, files]) => `${name} (${files.length}x)`).join(', ');
+    const extra = duplicates.length > 3 ? `, ... (${duplicates.length} total)` : '';
+    issues.push({
+      severity: 'LOW',
+      category: 'Quality',
+      title: `${duplicates.length} duplicate file name${duplicates.length === 1 ? '' : 's'} across directories`,
+      detail: `Possible code duplication — ${preview}${extra}`,
+    });
+  }
+
+  // Empty files (< 5 lines of actual code)
+  const emptyFiles: string[] = [];
+  for (const file of sourceFiles) {
+    let content: string;
+    try {
+      content = await readFile(join(dir, file), 'utf8');
+    } catch { continue; }
+
+    const codeLines = content.split('\n').filter(l => {
+      const t = l.trim();
+      return t.length > 0 && !t.startsWith('//') && !t.startsWith('*') && !t.startsWith('/*') && !t.startsWith('import ') && !t.startsWith('export {}');
+    });
+    if (codeLines.length < 5) {
+      emptyFiles.push(file);
+    }
+  }
+
+  if (emptyFiles.length > 0) {
+    const preview = emptyFiles.slice(0, 5).join(', ');
+    const extra = emptyFiles.length > 5 ? `, ... (${emptyFiles.length} total)` : '';
+    issues.push({
+      severity: 'LOW',
+      category: 'Quality',
+      title: `${emptyFiles.length} empty or near-empty file${emptyFiles.length === 1 ? '' : 's'}`,
+      detail: `Files with < 5 lines of actual code — ${preview}${extra}`,
+    });
+  }
+
+  // Deeply nested callbacks (4+ levels of indentation — callback hell indicator)
+  const deeplyNested: string[] = [];
+  for (const file of sourceFiles) {
+    let content: string;
+    try {
+      content = await readFile(join(dir, file), 'utf8');
+    } catch { continue; }
+
+    const lines = content.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.trim().length === 0) continue;
+
+      // Count leading whitespace depth (tabs = 1 level, 2/4 spaces = 1 level)
+      const leadingSpaces = line.match(/^(\s*)/)?.[1] || '';
+      const tabCount = (leadingSpaces.match(/\t/g) || []).length;
+      const spaceCount = leadingSpaces.replace(/\t/g, '').length;
+      const depth = tabCount + Math.floor(spaceCount / 2);
+
+      // 4+ levels with a callback-like pattern (function, =>, {)
+      if (depth >= 8 && /[{(]|=>/.test(line)) {
+        deeplyNested.push(`${file}:${i + 1}`);
+        break; // one per file is enough
+      }
+    }
+  }
+
+  if (deeplyNested.length > 0) {
+    const preview = deeplyNested.slice(0, 5).join(', ');
+    const extra = deeplyNested.length > 5 ? `, ... (${deeplyNested.length} total)` : '';
+    issues.push({
+      severity: 'MEDIUM',
+      category: 'Quality',
+      title: `${deeplyNested.length} file${deeplyNested.length === 1 ? '' : 's'} with deeply nested code`,
+      detail: `4+ levels of nesting detected (callback hell) — ${preview}${extra}`,
+    });
+  }
+
+  // Check for TypeScript strict mode
+  try {
+    const tsconfig = await readFile(join(dir, 'tsconfig.json'), 'utf8');
+    const parsed = JSON.parse(tsconfig);
+    if (!parsed?.compilerOptions?.strict) {
+      issues.push({
+        severity: 'MEDIUM',
+        category: 'Quality',
+        title: 'TypeScript strict mode is not enabled',
+        detail: 'tsconfig.json — set "strict": true in compilerOptions for better type safety',
+      });
+    }
+  } catch {
+    // No tsconfig.json — that's fine, not a TS project or no config
   }
 
   return issues;
