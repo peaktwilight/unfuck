@@ -146,9 +146,59 @@ Paste the markdown into your README. Re-run after fixing issues to update your s
 | Flag | What it does |
 |------|-------------|
 | `--fix` | Auto-fix safe issues, show before/after score |
+| `--diff` | Only check files changed since the last commit (staged + unstaged + untracked) |
 | `--watch` | Re-scan on file changes, live score updates |
 | `--badge` | Generate a shields.io badge for your README |
 | `--json` | Machine-readable JSON output |
+
+## CI / GitHub Action
+
+Score every pull request automatically. The action posts (and updates) a comment with the unfuck score, issue breakdown, and top problems.
+
+### Built-in workflow
+
+The repo includes a ready-made workflow at `.github/workflows/unfuck.yml` that triggers on every PR. No configuration needed -- just push and it works.
+
+### Composite action
+
+Use `peaktwilight/unfcked` as a reusable action in your own workflows:
+
+```yaml
+name: unfuck
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: peaktwilight/unfcked@main
+        with:
+          path: "."        # directory to scan (default: ".")
+          threshold: 50    # fail the check if score is below this (default: 50)
+```
+
+**Inputs:**
+
+| Input | Default | Description |
+|-------|---------|-------------|
+| `path` | `.` | Directory to scan |
+| `threshold` | `50` | Minimum passing score. The action fails if the score is below this. |
+
+The action posts a PR comment with:
+- Score badge (color-coded)
+- Verdict (e.g. CERTIFIED CLEAN, NEEDS WORK, DUMPSTER FIRE)
+- Issue counts grouped by severity
+- Top 5 critical/high issues with file paths
+
+Comments are upserted -- pushing new commits updates the existing comment instead of creating duplicates.
 
 ## Development
 

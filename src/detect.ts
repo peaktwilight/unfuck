@@ -39,3 +39,11 @@ export async function detectProject(dir: string): Promise<ProjectInfo> {
     dir,
   };
 }
+
+export function filterProjectFiles(project: ProjectInfo, changedFiles: string[]): ProjectInfo {
+  const changed = new Set(changedFiles);
+  return {
+    ...project,
+    files: project.files.filter(f => changed.has(f)),
+  };
+}
