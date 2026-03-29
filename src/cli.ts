@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { resolve } from 'path';
+import { resolve, join } from 'path';
 import ora from 'ora';
 import chalk from 'chalk';
 import { detectProject, filterProjectFiles } from './detect.js';
@@ -10,6 +10,7 @@ import { runSeoChecks } from './checks/seo.js';
 import { runDepsChecks } from './checks/deps.js';
 import { runQualityChecks } from './checks/quality.js';
 import { runProductionChecks } from './checks/production.js';
+import { runFrameworkChecks } from './checks/frameworks.js';
 import { displayReport, displayJson, displayComparison, displayComparisonJson, calcScore } from './display.js';
 import { autoFix } from './fix.js';
 import { loadConfig, applyConfig, writeDefaultConfig } from './config.js';
@@ -23,6 +24,7 @@ const watchMode = args.includes('--watch');
 const diffMode = args.includes('--diff');
 const initMode = args.includes('--init');
 const compareMode = args.includes('--compare');
+const forceMode = args.includes('--force');
 const helpMode = args.includes('--help') || args.includes('-h');
 const positionalArgs = args.filter(a => !a.startsWith('--'));
 const targetDir = resolve(positionalArgs[0] || '.');
@@ -33,14 +35,15 @@ async function runScan(dir: string, diff = false): Promise<{ project: ProjectInf
     const changed = await getChangedFiles(dir);
     project = filterProjectFiles(project, changed);
   }
-  const [security, seo, deps, quality, production] = await Promise.all([
+  const [security, seo, deps, quality, production, frameworks] = await Promise.all([
     runSecurityChecks(dir, project),
     runSeoChecks(dir, project),
     runDepsChecks(dir, project),
     runQualityChecks(dir, project),
     runProductionChecks(dir, project),
+    runFrameworkChecks(dir, project),
   ]);
-  const issues = [...security, ...seo, ...deps, ...quality, ...production];
+  const issues = [...security, ...seo, ...deps, ...quality, ...production, ...frameworks];
   return { project, issues };
 }
 
@@ -106,7 +109,15 @@ async function main(): Promise<void> {
   }
 
   if (initMode) {
-    const filepath = writeDefaultConfig(targetDir);
+    const { existsSync } = await import('node:fs');
+    const configPath = join(targetDir, '.unfckedrc.json');
+    if (!forceMode && existsSync(configPath)) {
+      console.log();
+      console.warn(chalk.yellow('  Config file already exists. Use --force to overwrite.'));
+      console.log();
+      return;
+    }
+    const filepath = writeDefaultConfig(targetDir, forceMode);
     console.log();
     console.log(chalk.green(`  Created ${filepath}`));
     console.log(chalk.dim('  Edit this file to customize unfuck for your project.'));
@@ -212,10 +223,11 @@ async function main(): Promise<void> {
       // Re-scan to get updated score
       const spinner2 = ora('Re-scanning...').start();
       const { project: newProject, issues: newIssues } = await runScan(targetDir, diffMode);
+      const filteredNewIssues = applyConfig(newIssues, config);
       spinner2.stop();
-      const afterScore = calcScore(newIssues);
+      const afterScore = calcScore(filteredNewIssues);
 
-      displayReport(newProject, newIssues);
+      displayReport(newProject, filteredNewIssues);
 
       if (afterScore > beforeScore) {
         console.log(chalk.green(`  Score improved: ${beforeScore}/100 → ${afterScore}/100`));
@@ -242,22 +254,24 @@ async function main(): Promise<void> {
       if (spinner) spinner.text = `Detected ${project.type} project. Running checks...`;
     }
 
-    const [security, seo, deps, quality, production] = await Promise.all([
+    const [security, seo, deps, quality, production, frameworks] = await Promise.all([
       runSecurityChecks(targetDir, project),
       runSeoChecks(targetDir, project),
       runDepsChecks(targetDir, project),
       runQualityChecks(targetDir, project),
       runProductionChecks(targetDir, project),
+      runFrameworkChecks(targetDir, project),
     ]);
 
-    const issues = [...security, ...seo, ...deps, ...quality, ...production];
+    const issues = [...security, ...seo, ...deps, ...quality, ...production, ...frameworks];
+    const filteredIssues = applyConfig(issues, config);
 
     if (spinner) spinner.stop();
 
     if (jsonMode) {
-      displayJson(project, issues);
+      displayJson(project, filteredIssues);
     } else {
-      displayReport(project, issues);
+      displayReport(project, filteredIssues);
     }
 
     if (watchMode) {
@@ -275,8 +289,9 @@ async function main(): Promise<void> {
           const watchSpinner = ora('Re-scanning project...').start();
           try {
             const { project: p, issues: i } = await runScan(targetDir, diffMode);
+            const filteredWatchIssues = applyConfig(i, config);
             watchSpinner.stop();
-            displayReport(p, i);
+            displayReport(p, filteredWatchIssues);
             console.log(chalk.dim('  Watching for changes... (Ctrl+C to stop)\n'));
           } catch (err) {
             watchSpinner.fail('Re-scan failed');
@@ -287,7 +302,7 @@ async function main(): Promise<void> {
       return;
     }
 
-    const hasCritical = issues.some(i => i.severity === 'CRITICAL');
+    const hasCritical = filteredIssues.some(i => i.severity === 'CRITICAL');
     process.exit(hasCritical ? 1 : 0);
   } catch (err) {
     if (spinner) spinner.fail('Scan failed');

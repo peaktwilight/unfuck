@@ -150,6 +150,9 @@ Paste the markdown into your README. Re-run after fixing issues to update your s
 | `--watch` | Re-scan on file changes, live score updates |
 | `--badge` | Generate a shields.io badge for your README |
 | `--json` | Machine-readable JSON output |
+| `--compare <dir1> <dir2>` | Compare two projects' scores side by side |
+| `--init` | Generate a default `.unfckedrc.json` config file |
+| `--help` / `-h` | Show help message |
 
 ## CI / GitHub Action
 
