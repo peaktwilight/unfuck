@@ -1,12 +1,15 @@
 # unfuck
 
+[![npm](https://img.shields.io/npm/v/unfcked)](https://www.npmjs.com/package/unfcked)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue.svg)
 ![Checks: 45+](https://img.shields.io/badge/checks-45%2B-orange.svg)
 
-[unfuck.doruk.ch](https://unfuck.doruk.ch)
+[unfuck.doruk.ch](https://unfuck.doruk.ch) · [npm](https://www.npmjs.com/package/unfcked)
 
 > Your vibe-coded app has problems. This finds all of them.
+
+Published as `unfcked` on npm (because npm doesn't allow the full word 🙄)
 
 AI coding tools get you 80% of the way there. This tool finds every issue in the last 20% -- the part that actually breaks in production, tanks your SEO, and leaks your API keys.
 
@@ -15,11 +18,11 @@ No AI. No API keys. **45+ checks.** Pure static analysis. Runs in seconds.
 ## Quick Start
 
 ```bash
-git clone https://github.com/peaktwilight/unfuck
-cd unfuck
-npm install
-npm run build
-node dist/cli.js /path/to/your/project
+# Scan current directory
+npx unfcked
+
+# Scan a specific project
+npx unfcked /path/to/your/project
 ```
 
 ## What It Checks
@@ -76,7 +79,7 @@ node dist/cli.js /path/to/your/project
 
 ```bash
 # Live score updates as you fix issues
-unfuck --watch /path/to/project
+npx unfcked --watch /path/to/project
 ```
 
 Re-scans automatically when files change. Fix an issue, see your score go up in real time.
@@ -105,7 +108,7 @@ Starts at 100. Every issue deducts points:
 ## Auto-Fix
 
 ```bash
-node dist/cli.js /path/to/your/project --fix
+npx unfcked /path/to/your/project --fix
 ```
 
 Automatically fixes safe issues:
@@ -119,7 +122,7 @@ Won't touch anything risky. Won't delete your `console.log`s (you might need tho
 ## README Badge
 
 ```bash
-node dist/cli.js /path/to/your/project --badge
+npx unfcked /path/to/your/project --badge
 ```
 
 Get a shields.io badge for your README:
@@ -136,6 +139,16 @@ Paste the markdown into your README. Re-run after fixing issues to update your s
 | `--watch` | Re-scan on file changes, live score updates |
 | `--badge` | Generate a shields.io badge for your README |
 | `--json` | Machine-readable JSON output |
+
+## Development
+
+```bash
+git clone https://github.com/peaktwilight/unfuck
+cd unfuck
+npm install
+npm run build
+node dist/cli.js /path/to/your/project
+```
 
 ## Framework Support
 
