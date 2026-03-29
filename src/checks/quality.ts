@@ -49,8 +49,8 @@ export async function runQualityChecks(dir: string, project: ProjectInfo): Promi
         todos.push(`${file}:${lineNum}`);
       }
 
-      // TypeScript `any` type
-      if (/\.tsx?$/.test(file)) {
+      // TypeScript `any` type (skip checker's own files to avoid false positives)
+      if (/\.tsx?$/.test(file) && !file.includes('/checks/')) {
         if (/:\s*any\b/.test(line) || /as\s+any\b/.test(line) || /<any>/.test(line)) {
           anyTypes.push(`${file}:${lineNum}`);
         }

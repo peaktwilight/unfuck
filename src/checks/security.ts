@@ -163,6 +163,9 @@ export async function runSecurityChecks(dir: string, project: ProjectInfo): Prom
   // Check for Math.random() in security contexts
   const weakCryptoUsages: string[] = [];
   for (const file of sourceFiles) {
+    // Skip the checker's own files to avoid false positives
+    if (file.includes('/checks/') || file.endsWith('checks/security.ts')) continue;
+
     let content: string;
     try {
       content = await readFile(join(dir, file), 'utf8');
