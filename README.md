@@ -28,7 +28,7 @@ npx unfcked /path/to/your/project
 ### Development
 
 ```bash
-git clone https://github.com/peaktwilight/unfuck
+git clone https://github.com/peaktwilight/unfcked
 cd unfuck
 npm install
 npm run build
