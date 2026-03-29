@@ -1,10 +1,10 @@
 {
   "name": "unfcked",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Fix the last 20% of your vibe-coded project. Find every issue AI coding tools missed.",
   "type": "module",
   "bin": {
-    "unfuck": "./dist/cli.js"
+    "unfcked": "./dist/cli.js"
   },
   "files": [
     "dist",
