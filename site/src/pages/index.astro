@@ -457,12 +457,12 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
 
       <div class="relative group">
         <div class="rounded-xl border border-border bg-bg-terminal p-6 font-mono text-left">
-          <div class="text-text-dim text-xs mb-3"># setup</div>
-          <div class="text-accent text-sm sm:text-base break-all" id="install-cmd">git clone https://github.com/peaktwilight/unfuck && cd unfuck && npm i && npm run build</div>
-          <div class="text-text-dim text-xs mt-4 mb-1"># scan any project</div>
-          <div class="text-white text-sm sm:text-base">node dist/cli.js /path/to/your/project</div>
-          <div class="text-text-dim text-xs mt-3 mb-1"># auto-fix + watch</div>
-          <div class="text-white text-sm sm:text-base">node dist/cli.js --fix --watch /path/to/project</div>
+          <div class="text-text-dim text-xs mb-3"># scan your project (once published)</div>
+          <div class="text-accent text-sm sm:text-base" id="install-cmd">npx isitfucked</div>
+          <div class="text-text-dim text-xs mt-3 mb-1"># with auto-fix</div>
+          <div class="text-white text-sm sm:text-base">npx isitfucked --fix</div>
+          <div class="text-text-dim text-xs mt-3 mb-1"># or clone for development</div>
+          <div class="text-gray-300 text-sm">git clone https://github.com/peaktwilight/unfuck && cd unfuck && npm i && npm run build</div>
         </div>
         <button
           id="copy-btn"
