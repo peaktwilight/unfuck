@@ -50,41 +50,15 @@ body {
   animation: fadeInLine 0.3s ease-out forwards;
 }
 
-/* Glow effect for the title — dramatic pulse */
-@keyframes pulseGlow {
-  0%, 100% {
-    text-shadow:
-      0 0 40px rgba(249, 115, 22, 0.3),
-      0 0 80px rgba(249, 115, 22, 0.1),
-      0 0 160px rgba(249, 115, 22, 0.05);
-  }
-  50% {
-    text-shadow:
-      0 0 60px rgba(249, 115, 22, 0.6),
-      0 0 120px rgba(249, 115, 22, 0.3),
-      0 0 200px rgba(249, 115, 22, 0.1);
-  }
-}
-
+/* Glow effect for the title — subtle breathing pulse */
 .title-glow {
-  animation: pulseGlow 3s ease-in-out infinite;
+  text-shadow: 0 0 40px rgba(249, 115, 22, 0.3), 0 0 80px rgba(249, 115, 22, 0.1);
+  animation: breathe 4s ease-in-out infinite;
 }
 
-/* Scan lines over the hero title */
-@keyframes scanDown {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
-}
-
-.scan-lines {
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(249, 115, 22, 0.03) 2px,
-    rgba(249, 115, 22, 0.03) 4px
-  );
-  animation: scanDown 4s linear infinite;
+@keyframes breathe {
+  0%, 100% { text-shadow: 0 0 40px rgba(249, 115, 22, 0.2), 0 0 80px rgba(249, 115, 22, 0.05); }
+  50% { text-shadow: 0 0 60px rgba(249, 115, 22, 0.4), 0 0 120px rgba(249, 115, 22, 0.15); }
 }
 
 /* Score bar animation */

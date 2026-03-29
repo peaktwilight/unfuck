@@ -17,6 +17,7 @@ const args = process.argv.slice(2);
 const jsonMode = args.includes('--json');
 const badgeMode = args.includes('--badge');
 const fixMode = args.includes('--fix');
+const watchMode = args.includes('--watch');
 const targetDir = resolve(args.find(a => !a.startsWith('--')) || '.');
 
 async function runScan(dir: string): Promise<{ project: ProjectInfo; issues: Issue[] }> {
@@ -136,6 +137,33 @@ async function main(): Promise<void> {
       displayJson(project, issues);
     } else {
       displayReport(project, issues);
+    }
+
+    if (watchMode) {
+      const { watch } = await import('node:fs');
+      console.log(chalk.dim('\n  Watching for changes... (Ctrl+C to stop)\n'));
+
+      let timeout: NodeJS.Timeout;
+      watch(targetDir, { recursive: true }, (_event, filename) => {
+        // Ignore node_modules, .git, and dist directories
+        if (filename && (/node_modules|\.git|dist/.test(filename))) return;
+
+        clearTimeout(timeout);
+        timeout = setTimeout(async () => {
+          console.clear();
+          const watchSpinner = ora('Re-scanning project...').start();
+          try {
+            const { project: p, issues: i } = await runScan(targetDir);
+            watchSpinner.stop();
+            displayReport(p, i);
+            console.log(chalk.dim('  Watching for changes... (Ctrl+C to stop)\n'));
+          } catch (err) {
+            watchSpinner.fail('Re-scan failed');
+            console.error((err as Error).message);
+          }
+        }, 1000);
+      });
+      return;
     }
 
     const hasCritical = issues.some(i => i.severity === 'CRITICAL');

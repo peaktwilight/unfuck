@@ -6,6 +6,11 @@
   "bin": {
     "unfuck": "./dist/cli.js"
   },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build"
