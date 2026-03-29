@@ -1,11 +1,12 @@
 import { readFile, access } from 'fs/promises';
 import { join } from 'path';
 import { glob } from 'glob';
+import type { Issue, ProjectInfo } from '../types.js';
 
-const IGNORE = ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**', '**/.next/**', '**/out/**'];
+const IGNORE: string[] = ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**', '**/.next/**', '**/out/**'];
 
-export async function runSeoChecks(dir, project) {
-  const issues = [];
+export async function runSeoChecks(dir: string, project: ProjectInfo): Promise<Issue[]> {
+  const issues: Issue[] = [];
 
   // Find HTML files
   const htmlFiles = await glob('**/*.{html,htm}', { cwd: dir, ignore: IGNORE });
@@ -21,10 +22,10 @@ export async function runSeoChecks(dir, project) {
   let hasOgTitle = false;
   let hasOgDesc = false;
   let hasFavicon = false;
-  const missingAlt = [];
+  const missingAlt: string[] = [];
 
   for (const file of htmlFiles) {
-    let content;
+    let content: string;
     try {
       content = await readFile(join(dir, file), 'utf8');
     } catch { continue; }
@@ -50,7 +51,7 @@ export async function runSeoChecks(dir, project) {
   if (['React', 'Next.js'].includes(project.type)) {
     const jsxFiles = await glob('**/*.{jsx,tsx,js,ts}', { cwd: dir, ignore: IGNORE });
     for (const file of jsxFiles) {
-      let content;
+      let content: string;
       try {
         content = await readFile(join(dir, file), 'utf8');
       } catch { continue; }
@@ -81,7 +82,7 @@ export async function runSeoChecks(dir, project) {
     });
   }
 
-  const missingOg = [];
+  const missingOg: string[] = [];
   if (!hasOgTitle) missingOg.push('og:title');
   if (!hasOgDesc) missingOg.push('og:description');
   if (!hasOgImage) missingOg.push('og:image');

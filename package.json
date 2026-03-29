@@ -4,12 +4,20 @@
   "description": "Fix the last 20% of your vibe-coded project. Find every issue AI coding tools missed.",
   "type": "module",
   "bin": {
-    "unfuck": "./src/cli.js"
+    "unfuck": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
   },
   "license": "MIT",
   "dependencies": {
     "chalk": "^5.3.0",
     "glob": "^11.0.0",
     "ora": "^8.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^6.0.2"
   }
 }

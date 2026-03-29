@@ -1,27 +1,28 @@
-import chalk from 'chalk';
+import chalk, { type ChalkInstance } from 'chalk';
+import type { Severity, Issue, ProjectInfo } from './types.js';
 
-const SEVERITY_ORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
-const SEVERITY_COLORS = {
+const SEVERITY_ORDER: Severity[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+const SEVERITY_COLORS: Record<Severity, ChalkInstance> = {
   CRITICAL: chalk.red,
   HIGH: chalk.hex('#FF8C00'),
   MEDIUM: chalk.yellow,
   LOW: chalk.blue,
 };
-const SEVERITY_ICONS = {
+const SEVERITY_ICONS: Record<Severity, string> = {
   CRITICAL: '\u{1F534}',
   HIGH: '\u{1F7E0}',
   MEDIUM: '\u{1F7E1}',
   LOW: '\u{1F535}',
 };
-const SEVERITY_LABELS = {
+const SEVERITY_LABELS: Record<Severity, string> = {
   CRITICAL: 'CRITICAL (fix these NOW)',
   HIGH: 'HIGH (fix before deploying)',
   MEDIUM: 'MEDIUM (should fix soon)',
   LOW: 'LOW (nice to have)',
 };
 
-function calcScore(issues) {
-  const penalties = { CRITICAL: 20, HIGH: 10, MEDIUM: 5, LOW: 2 };
+function calcScore(issues: Issue[]): number {
+  const penalties: Record<Severity, number> = { CRITICAL: 20, HIGH: 10, MEDIUM: 5, LOW: 2 };
   let score = 100;
   for (const issue of issues) {
     score -= penalties[issue.severity] || 0;
@@ -29,7 +30,7 @@ function calcScore(issues) {
   return Math.max(0, Math.min(100, score));
 }
 
-function getVerdict(score) {
+function getVerdict(score: number): string {
   if (score >= 90) return 'CERTIFIED CLEAN';
   if (score >= 70) return 'MOSTLY GOOD';
   if (score >= 50) return 'NEEDS WORK';
@@ -37,7 +38,7 @@ function getVerdict(score) {
   return 'DUMPSTER FIRE';
 }
 
-function verdictColor(score) {
+function verdictColor(score: number): ChalkInstance {
   if (score >= 90) return chalk.green;
   if (score >= 70) return chalk.hex('#90EE90');
   if (score >= 50) return chalk.yellow;
@@ -47,7 +48,7 @@ function verdictColor(score) {
 
 const LINE = '\u2500'.repeat(54);
 
-export function displayReport(project, issues) {
+export function displayReport(project: ProjectInfo, issues: Issue[]): void {
   console.log();
   console.log(chalk.dim(LINE));
   console.log(chalk.bold('  UNFUCK') + chalk.dim('  \u2014  fix the last 20% of your vibe-coded project'));
@@ -102,7 +103,7 @@ export function displayReport(project, issues) {
   console.log(`  SCORE: ${chalk.bold(score + '/100')}  \u2014  ${vColor.bold(verdict)}`);
   console.log();
 
-  const counts = {};
+  const counts: Partial<Record<Severity, number>> = {};
   for (const s of SEVERITY_ORDER) {
     const c = issues.filter(i => i.severity === s).length;
     if (c > 0) counts[s] = c;
@@ -116,7 +117,7 @@ export function displayReport(project, issues) {
   console.log();
 }
 
-export function displayJson(project, issues) {
+export function displayJson(project: ProjectInfo, issues: Issue[]): void {
   const score = calcScore(issues);
   const output = {
     project: { name: project.name, type: project.type, filesScanned: project.files.length },

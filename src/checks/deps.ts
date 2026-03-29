@@ -1,8 +1,9 @@
 import { readFile, stat } from 'fs/promises';
 import { join } from 'path';
 import { glob } from 'glob';
+import type { Issue, ProjectInfo } from '../types.js';
 
-const IGNORE = ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**', '**/.next/**', '**/out/**'];
+const IGNORE: string[] = ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**', '**/.next/**', '**/out/**'];
 
 // Packages that are used implicitly (config-based, plugins, etc.)
 const IMPLICIT_PACKAGES = new Set([
@@ -21,7 +22,7 @@ const DEV_ONLY_PACKAGES = new Set([
   '@storybook/react',
 ]);
 
-function isImplicit(name) {
+function isImplicit(name: string): boolean {
   if (IMPLICIT_PACKAGES.has(name)) return true;
   for (const prefix of IMPLICIT_PACKAGES) {
     if (prefix.endsWith('/') && name.startsWith(prefix)) return true;
@@ -29,8 +30,8 @@ function isImplicit(name) {
   return false;
 }
 
-export async function runDepsChecks(dir, project) {
-  const issues = [];
+export async function runDepsChecks(dir: string, project: ProjectInfo): Promise<Issue[]> {
+  const issues: Issue[] = [];
   const pkg = project.pkg;
 
   if (!pkg) return issues;
@@ -71,7 +72,6 @@ export async function runDepsChecks(dir, project) {
     const unused = allDeps.filter(dep => {
       if (isImplicit(dep)) return false;
       // Check for import/require of the package
-      const shortName = dep.startsWith('@') ? dep : dep.split('/')[0];
       const patterns = [
         `from '${dep}`,
         `from "${dep}`,

@@ -1,25 +1,26 @@
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { glob } from 'glob';
+import type { Issue, ProjectInfo } from '../types.js';
 
-const IGNORE = ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**', '**/.next/**', '**/out/**'];
+const IGNORE: string[] = ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**', '**/.next/**', '**/out/**'];
 
-export async function runQualityChecks(dir, project) {
-  const issues = [];
+export async function runQualityChecks(dir: string, project: ProjectInfo): Promise<Issue[]> {
+  const issues: Issue[] = [];
 
   const sourceFiles = await glob('**/*.{js,ts,jsx,tsx,mjs,cjs}', { cwd: dir, ignore: IGNORE });
 
-  const consoleLogs = [];
-  const todos = [];
-  const longFiles = [];
-  const silentCatches = [];
-  const anyTypes = [];
+  const consoleLogs: string[] = [];
+  const todos: string[] = [];
+  const longFiles: Array<{ file: string; lines: number }> = [];
+  const silentCatches: string[] = [];
+  const anyTypes: string[] = [];
 
   for (const file of sourceFiles) {
     // Skip test files for console.log check
     const isTest = /\.(test|spec|e2e)\.|__tests__|__mocks__/.test(file);
 
-    let content;
+    let content: string;
     try {
       content = await readFile(join(dir, file), 'utf8');
     } catch { continue; }
@@ -56,9 +57,9 @@ export async function runQualityChecks(dir, project) {
       }
     }
 
-    // Silent catch blocks — look for catch blocks with empty body or just console
+    // Silent catch blocks -- look for catch blocks with empty body or just console
     const catchRegex = /catch\s*\([^)]*\)\s*\{([^}]*)}/g;
-    let match;
+    let match: RegExpExecArray | null;
     while ((match = catchRegex.exec(content)) !== null) {
       const body = match[1].trim();
       if (body === '' || body === '// ignore' || body === '// noop') {

@@ -1,11 +1,12 @@
 import { readFile, access } from 'fs/promises';
 import { join } from 'path';
 import { glob } from 'glob';
+import type { Issue, ProjectInfo } from '../types.js';
 
-const IGNORE = ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**', '**/.next/**', '**/out/**'];
+const IGNORE: string[] = ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**', '**/.next/**', '**/out/**'];
 
-export async function runProductionChecks(dir, project) {
-  const issues = [];
+export async function runProductionChecks(dir: string, project: ProjectInfo): Promise<Issue[]> {
+  const issues: Issue[] = [];
   const pkg = project.pkg;
   const isReact = ['React', 'Next.js'].includes(project.type);
   const isWeb = ['React', 'Next.js', 'Vue', 'Nuxt', 'Svelte', 'HTML'].includes(project.type);
@@ -16,7 +17,7 @@ export async function runProductionChecks(dir, project) {
   if (isReact) {
     let hasErrorBoundary = false;
     for (const file of sourceFiles) {
-      let content;
+      let content: string;
       try {
         content = await readFile(join(dir, file), 'utf8');
       } catch { continue; }
@@ -39,7 +40,7 @@ export async function runProductionChecks(dir, project) {
   if (isWeb) {
     let hasLoadingState = false;
     for (const file of sourceFiles) {
-      let content;
+      let content: string;
       try {
         content = await readFile(join(dir, file), 'utf8');
       } catch { continue; }
@@ -70,7 +71,7 @@ export async function runProductionChecks(dir, project) {
     }
     if (!has404) {
       for (const file of sourceFiles) {
-        let content;
+        let content: string;
         try {
           content = await readFile(join(dir, file), 'utf8');
         } catch { continue; }
@@ -124,9 +125,9 @@ export async function runProductionChecks(dir, project) {
   }
 
   // Check process.env without fallback
-  const envNoFallback = [];
+  const envNoFallback: string[] = [];
   for (const file of sourceFiles) {
-    let content;
+    let content: string;
     try {
       content = await readFile(join(dir, file), 'utf8');
     } catch { continue; }

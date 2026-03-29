@@ -1,10 +1,16 @@
-import { readFile, access } from 'fs/promises';
+import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { glob } from 'glob';
+import type { Issue, ProjectInfo } from '../types.js';
 
-const IGNORE = ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**', '**/.next/**', '**/out/**'];
+const IGNORE: string[] = ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**', '**/.next/**', '**/out/**'];
 
-const SECRET_PATTERNS = [
+interface SecretPattern {
+  regex: RegExp;
+  label: string;
+}
+
+const SECRET_PATTERNS: SecretPattern[] = [
   { regex: /(?:API_KEY|APIKEY|api_key)\s*[=:]\s*["']([^"']{8,})["']/i, label: 'API key' },
   { regex: /(?:SECRET|SECRET_KEY|APP_SECRET)\s*[=:]\s*["']([^"']{8,})["']/i, label: 'Secret' },
   { regex: /(?:PASSWORD|PASSWD|DB_PASS)\s*[=:]\s*["']([^"']{2,})["']/i, label: 'Password' },
@@ -18,8 +24,8 @@ const SECRET_PATTERNS = [
 
 const UNSAFE_HTTP = /["'](http:\/\/(?!localhost|127\.0\.0\.1|0\.0\.0\.0)[^\s"']+)["']/;
 
-export async function runSecurityChecks(dir, project) {
-  const issues = [];
+export async function runSecurityChecks(dir: string, project: ProjectInfo): Promise<Issue[]> {
+  const issues: Issue[] = [];
 
   // Scan source files for secrets and dangerous patterns
   const sourceFiles = await glob('**/*.{js,ts,jsx,tsx,mjs,cjs}', { cwd: dir, ignore: IGNORE });
@@ -27,7 +33,7 @@ export async function runSecurityChecks(dir, project) {
   const allFiles = [...sourceFiles, ...envFiles];
 
   for (const file of allFiles) {
-    let content;
+    let content: string;
     try {
       content = await readFile(join(dir, file), 'utf8');
     } catch { continue; }
@@ -41,7 +47,7 @@ export async function runSecurityChecks(dir, project) {
       const trimmed = line.trim();
       if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) continue;
 
-      // Secret patterns (only in source files, not .env — .env files are fine IF gitignored)
+      // Secret patterns (only in source files, not .env -- .env files are fine IF gitignored)
       if (!file.startsWith('.env')) {
         for (const { regex, label } of SECRET_PATTERNS) {
           if (regex.test(line)) {

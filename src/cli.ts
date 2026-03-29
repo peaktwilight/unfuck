@@ -14,7 +14,7 @@ const args = process.argv.slice(2);
 const jsonMode = args.includes('--json');
 const targetDir = resolve(args.find(a => !a.startsWith('--')) || '.');
 
-async function main() {
+async function main(): Promise<void> {
   const spinner = jsonMode ? null : ora('Scanning project...').start();
 
   try {
@@ -43,7 +43,7 @@ async function main() {
     process.exit(hasCritical ? 1 : 0);
   } catch (err) {
     if (spinner) spinner.fail('Scan failed');
-    console.error(err.message);
+    console.error((err as Error).message);
     process.exit(2);
   }
 }
