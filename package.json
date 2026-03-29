@@ -16,9 +16,27 @@
     "prepublishOnly": "npm run build"
   },
   "license": "MIT",
+  "author": "peaktwilight",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/peaktwilight/unfuck"
+  },
+  "homepage": "https://unfuck.doruk.ch",
+  "keywords": [
+    "unfuck",
+    "lint",
+    "vibe-coding",
+    "security",
+    "seo",
+    "static-analysis",
+    "cli"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "chalk": "^5.3.0",
-    "glob": "^11.0.0",
+    "glob": "^13.0.6",
     "ora": "^8.1.0"
   },
   "devDependencies": {

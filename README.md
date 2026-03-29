@@ -25,6 +25,16 @@ npx unfcked
 npx unfcked /path/to/your/project
 ```
 
+### Development
+
+```bash
+git clone https://github.com/peaktwilight/unfuck
+cd unfuck
+npm install
+npm run build
+node dist/cli.js /path/to/your/project
+```
+
 ## What It Checks
 
 ### :red_circle: Critical -- fix these NOW
