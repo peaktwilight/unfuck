@@ -532,6 +532,86 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
     </div>
   </section>
 
+  <!-- ====== FAQ ====== -->
+  <section class="px-4 py-24 fade-up" id="faq">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="font-mono font-bold text-3xl md:text-5xl text-center mb-4 tracking-tight">FAQ</h2>
+      <p class="text-text-dim text-center mb-12 text-lg">Questions you were about to ask.</p>
+
+      <div class="space-y-3">
+        <details class="group bg-bg-card border border-border rounded-xl overflow-hidden">
+          <summary class="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer font-mono font-bold text-white hover:text-accent transition-colors select-none list-none [&::-webkit-details-marker]:hidden">
+            <span>Is this free?</span>
+            <ChevronDown class="w-5 h-5 text-text-dim group-open:rotate-180 transition-transform duration-200 shrink-0" />
+          </summary>
+          <div class="px-6 pb-5 text-text-dim text-sm leading-relaxed">
+            Yes. Open source, MIT licensed, no API keys, no accounts, free forever.
+          </div>
+        </details>
+
+        <details class="group bg-bg-card border border-border rounded-xl overflow-hidden">
+          <summary class="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer font-mono font-bold text-white hover:text-accent transition-colors select-none list-none [&::-webkit-details-marker]:hidden">
+            <span>Does it send data anywhere?</span>
+            <ChevronDown class="w-5 h-5 text-text-dim group-open:rotate-180 transition-transform duration-200 shrink-0" />
+          </summary>
+          <div class="px-6 pb-5 text-text-dim text-sm leading-relaxed">
+            No. Everything runs locally. Zero network calls. Your code never leaves your machine.
+          </div>
+        </details>
+
+        <details class="group bg-bg-card border border-border rounded-xl overflow-hidden">
+          <summary class="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer font-mono font-bold text-white hover:text-accent transition-colors select-none list-none [&::-webkit-details-marker]:hidden">
+            <span>Is it just another linter?</span>
+            <ChevronDown class="w-5 h-5 text-text-dim group-open:rotate-180 transition-transform duration-200 shrink-0" />
+          </summary>
+          <div class="px-6 pb-5 text-text-dim text-sm leading-relaxed">
+            It's a linter specifically designed for vibe-coded projects. It checks the things ESLint doesn't: missing meta tags, no error boundaries, hardcoded secrets, unused dependencies, no tests, no CI. The stuff AI forgets.
+          </div>
+        </details>
+
+        <details class="group bg-bg-card border border-border rounded-xl overflow-hidden">
+          <summary class="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer font-mono font-bold text-white hover:text-accent transition-colors select-none list-none [&::-webkit-details-marker]:hidden">
+            <span>Will --fix break my code?</span>
+            <ChevronDown class="w-5 h-5 text-text-dim group-open:rotate-180 transition-transform duration-200 shrink-0" />
+          </summary>
+          <div class="px-6 pb-5 text-text-dim text-sm leading-relaxed">
+            It only fixes safe things: .gitignore entries, moving devDeps to the right section. It won't touch your actual code. You can review changes with <code class="font-mono text-accent">git diff</code> after.
+          </div>
+        </details>
+
+        <details class="group bg-bg-card border border-border rounded-xl overflow-hidden">
+          <summary class="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer font-mono font-bold text-white hover:text-accent transition-colors select-none list-none [&::-webkit-details-marker]:hidden">
+            <span>How is the score calculated?</span>
+            <ChevronDown class="w-5 h-5 text-text-dim group-open:rotate-180 transition-transform duration-200 shrink-0" />
+          </summary>
+          <div class="px-6 pb-5 text-text-dim text-sm leading-relaxed">
+            Start at 100. Each critical issue costs 20 points, high costs 10, medium costs 5, low costs 2. Minimum is 0.
+          </div>
+        </details>
+
+        <details class="group bg-bg-card border border-border rounded-xl overflow-hidden">
+          <summary class="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer font-mono font-bold text-white hover:text-accent transition-colors select-none list-none [&::-webkit-details-marker]:hidden">
+            <span>What frameworks does it support?</span>
+            <ChevronDown class="w-5 h-5 text-text-dim group-open:rotate-180 transition-transform duration-200 shrink-0" />
+          </summary>
+          <div class="px-6 pb-5 text-text-dim text-sm leading-relaxed">
+            Auto-detects Next.js, React, Vue, Svelte, Nuxt, Node.js, and plain HTML. The checks are framework-aware.
+          </div>
+        </details>
+
+        <details class="group bg-bg-card border border-border rounded-xl overflow-hidden">
+          <summary class="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer font-mono font-bold text-white hover:text-accent transition-colors select-none list-none [&::-webkit-details-marker]:hidden">
+            <span>Can I add custom checks?</span>
+            <ChevronDown class="w-5 h-5 text-text-dim group-open:rotate-180 transition-transform duration-200 shrink-0" />
+          </summary>
+          <div class="px-6 pb-5 text-text-dim text-sm leading-relaxed">
+            Not yet, but it's on the roadmap. For now, use <code class="font-mono text-accent">--json</code> and pipe to your own scripts.
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
   <!-- ====== FOOTER ====== -->
   <footer class="px-4 py-20 border-t border-border">
     <div class="max-w-5xl mx-auto">
