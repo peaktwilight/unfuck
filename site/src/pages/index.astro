@@ -454,7 +454,7 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
   <section class="px-4 py-24 fade-up" id="try-online">
     <div class="max-w-3xl mx-auto">
       <h2 class="font-mono font-bold text-3xl md:text-5xl text-center mb-4 tracking-tight">Try it in your browser</h2>
-      <p class="text-text-dim text-center mb-10 text-lg">Paste your package.json — get instant results. No install needed.</p>
+      <p class="text-text-dim text-center mb-10 text-lg">Scan any public GitHub repo — or paste your package.json. No install needed.</p>
 
       <div class="bg-bg-terminal border border-border rounded-xl overflow-hidden">
         <div class="flex items-center justify-between px-4 py-3 bg-[#111] border-b border-border">
@@ -463,15 +463,30 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
             <div class="w-3 h-3 rounded-full bg-[#febc2e]"></div>
             <div class="w-3 h-3 rounded-full bg-[#28c840]"></div>
           </div>
-          <span class="text-xs text-text-dim font-mono">package.json scanner</span>
+          <!-- Tabs -->
+          <div class="flex items-center gap-4">
+            <button id="tab-github" onclick="switchTab('github')" class="text-xs font-mono text-accent border-b border-accent pb-0.5 transition-colors cursor-pointer">GitHub URL</button>
+            <button id="tab-paste" onclick="switchTab('paste')" class="text-xs font-mono text-text-dim hover:text-white pb-0.5 border-b border-transparent transition-colors cursor-pointer">Paste package.json</button>
+          </div>
         </div>
-        <div class="p-5">
+        <!-- GitHub URL tab -->
+        <div id="panel-github" class="p-5">
+          <div class="flex gap-3">
+            <input id="github-input" type="text" placeholder="https://github.com/user/repo" class="flex-1 bg-transparent border border-border rounded-lg px-4 py-3 font-mono text-sm text-white placeholder-text-dim/40 focus:border-accent focus:outline-none" />
+            <button onclick="scanGitHub()" class="px-6 py-3 bg-accent hover:bg-accent/80 text-white font-mono font-bold rounded-lg transition-colors cursor-pointer shrink-0">
+              Scan it
+            </button>
+          </div>
+          <p class="text-text-dim/40 text-xs font-mono mt-2">Works with any public repo. Checks package.json, tsconfig, .gitignore, CI, and more.</p>
+        </div>
+        <!-- Paste package.json tab -->
+        <div id="panel-paste" class="p-5 hidden">
           <textarea id="pkg-input" rows="8" placeholder='Paste your package.json here...' class="w-full bg-transparent border border-border rounded-lg p-4 font-mono text-sm text-white placeholder-text-dim/40 focus:border-accent focus:outline-none resize-none"></textarea>
           <button onclick="scanPackageJson()" class="mt-4 w-full py-3 bg-accent hover:bg-accent/80 text-white font-mono font-bold rounded-lg transition-colors cursor-pointer">
             Scan it
           </button>
         </div>
-        <div id="pkg-results" class="hidden border-t border-border p-5 font-mono text-sm">
+        <div id="scan-results" class="hidden border-t border-border p-5 font-mono text-sm">
         </div>
       </div>
     </div>
@@ -776,78 +791,31 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
     });
   </script>
 
-  <!-- Package.json scanner script -->
+  <!-- Scanner scripts -->
   <script is:inline>
-    function scanPackageJson() {
-      const input = document.getElementById('pkg-input').value.trim();
-      const results = document.getElementById('pkg-results');
+    function switchTab(tab) {
+      var ghTab = document.getElementById('tab-github');
+      var pasteTab = document.getElementById('tab-paste');
+      var ghPanel = document.getElementById('panel-github');
+      var pastePanel = document.getElementById('panel-paste');
+      if (tab === 'github') {
+        ghTab.className = 'text-xs font-mono text-accent border-b border-accent pb-0.5 transition-colors cursor-pointer';
+        pasteTab.className = 'text-xs font-mono text-text-dim hover:text-white pb-0.5 border-b border-transparent transition-colors cursor-pointer';
+        ghPanel.classList.remove('hidden');
+        pastePanel.classList.add('hidden');
+      } else {
+        pasteTab.className = 'text-xs font-mono text-accent border-b border-accent pb-0.5 transition-colors cursor-pointer';
+        ghTab.className = 'text-xs font-mono text-text-dim hover:text-white pb-0.5 border-b border-transparent transition-colors cursor-pointer';
+        pastePanel.classList.remove('hidden');
+        ghPanel.classList.add('hidden');
+      }
+    }
+
+    function renderResults(issues, title) {
+      var results = document.getElementById('scan-results');
       results.classList.remove('hidden');
 
-      let pkg;
-      try {
-        pkg = JSON.parse(input);
-      } catch(e) {
-        results.innerHTML = '<p class="text-red-400">Invalid JSON. Paste a valid package.json.</p>';
-        return;
-      }
-
-      const issues = [];
-      const deps = pkg.dependencies || {};
-      const devDeps = pkg.devDependencies || {};
-      const scripts = pkg.scripts || {};
-      const allDepNames = Object.keys(deps);
-      const allDevDepNames = Object.keys(devDeps);
-
-      // Check: dev deps in wrong section
-      const devInProd = ['typescript', 'eslint', 'prettier', 'jest', 'vitest', 'mocha', 'chai', 'webpack', 'vite', 'rollup', 'esbuild', 'ts-node', 'nodemon', 'ts-jest'];
-      const typesInProd = allDepNames.filter(d => d.startsWith('@types/'));
-      const misplaced = allDepNames.filter(d => devInProd.includes(d));
-      if (misplaced.length > 0 || typesInProd.length > 0) {
-        issues.push({ severity: 'medium', text: 'Dev dependencies in "dependencies": ' + [...misplaced, ...typesInProd].join(', ') });
-      }
-
-      // Check: too many deps
-      if (allDepNames.length > 30) {
-        issues.push({ severity: 'medium', text: allDepNames.length + ' production dependencies \u2014 that\'s a lot. Check for unused ones.' });
-      }
-
-      // Check: no build script
-      if (!scripts.build) {
-        issues.push({ severity: 'high', text: 'No "build" script found' });
-      }
-
-      // Check: no start or dev script
-      if (!scripts.start && !scripts.dev) {
-        issues.push({ severity: 'high', text: 'No "start" or "dev" script found' });
-      }
-
-      // Check: no test script or test is default
-      if (!scripts.test || scripts.test.includes('Error: no test specified')) {
-        issues.push({ severity: 'high', text: 'No test script \u2014 deploying without tests' });
-      }
-
-      // Check: missing name
-      if (!pkg.name) {
-        issues.push({ severity: 'low', text: 'Missing "name" field' });
-      }
-
-      // Check: missing version
-      if (!pkg.version) {
-        issues.push({ severity: 'low', text: 'Missing "version" field' });
-      }
-
-      // Check: missing license
-      if (!pkg.license) {
-        issues.push({ severity: 'low', text: 'Missing "license" field' });
-      }
-
-      // Check: missing description
-      if (!pkg.description) {
-        issues.push({ severity: 'low', text: 'Missing "description" field' });
-      }
-
-      // Calculate score
-      let score = 100;
+      var score = 100;
       issues.forEach(function(i) {
         if (i.severity === 'critical') score -= 20;
         if (i.severity === 'high') score -= 10;
@@ -856,27 +824,142 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
       });
       score = Math.max(0, score);
 
-      const colors = { critical: 'text-red-400', high: 'text-orange-400', medium: 'text-yellow-400', low: 'text-blue-400' };
-      const labels = { critical: 'CRITICAL', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' };
+      var colors = { critical: 'text-red-400', high: 'text-orange-400', medium: 'text-yellow-400', low: 'text-blue-400' };
+      var labels = { critical: 'CRITICAL', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' };
 
-      let verdict = 'CERTIFIED CLEAN';
-      let verdictColor = 'text-green-400';
-      if (score < 90) { verdict = 'MOSTLY GOOD'; verdictColor = 'text-green-400'; }
-      if (score < 70) { verdict = 'NEEDS WORK'; verdictColor = 'text-yellow-400'; }
-      if (score < 50) { verdict = 'PRETTY ROUGH'; verdictColor = 'text-orange-400'; }
-      if (score < 30) { verdict = 'DUMPSTER FIRE'; verdictColor = 'text-red-400'; }
+      var verdict, verdictColor;
+      if (score >= 90) { verdict = 'CERTIFIED CLEAN'; verdictColor = 'text-green-400'; }
+      else if (score >= 70) { verdict = 'MOSTLY GOOD'; verdictColor = 'text-green-400'; }
+      else if (score >= 50) { verdict = 'NEEDS WORK'; verdictColor = 'text-yellow-400'; }
+      else if (score >= 30) { verdict = 'PRETTY ROUGH'; verdictColor = 'text-orange-400'; }
+      else { verdict = 'DUMPSTER FIRE'; verdictColor = 'text-red-400'; }
 
-      let html = '';
+      var html = '<div class="mb-4 text-white font-bold">' + title + '</div>';
+
       if (issues.length === 0) {
-        html = '<p class="text-green-400">No issues found in your package.json. Nice.</p>';
+        html += '<p class="text-green-400 mb-4">No issues found. Impressive.</p>';
       } else {
-        html = issues.map(function(i) { return '<div class="flex items-start gap-2 mb-2"><span class="' + colors[i.severity] + ' font-bold text-xs">' + labels[i.severity] + '</span> <span class="text-gray-300">' + i.text + '</span></div>'; }).join('');
+        html += issues.map(function(i) {
+          return '<div class="flex items-start gap-2 mb-2"><span class="' + colors[i.severity] + ' font-bold text-xs shrink-0">' + labels[i.severity] + '</span> <span class="text-gray-300">' + i.text + '</span></div>';
+        }).join('');
       }
 
       html += '<div class="mt-4 pt-4 border-t border-gray-800"><span class="text-text-dim">Score:</span> <span class="' + verdictColor + ' font-bold text-lg">' + score + '/100</span> <span class="text-text-dim">\u2014</span> <span class="' + verdictColor + ' font-bold">' + verdict + '</span></div>';
-      html += '<p class="text-text-dim/50 text-xs mt-3">This is a quick scan of your package.json only. Run <code class="text-accent">npx unfcked</code> for the full 45+ check scan.</p>';
+      html += '<p class="text-text-dim/50 text-xs mt-3">This scans key files only. Run <code class="text-accent">npx unfcked</code> for the full 45+ check deep scan.</p>';
 
       results.innerHTML = html;
+    }
+
+    function checkPackageJson(pkgRaw, issues) {
+      try {
+        var pkg = JSON.parse(pkgRaw);
+        var deps = Object.keys(pkg.dependencies || {});
+        var scripts = pkg.scripts || {};
+
+        var devInProd = ['typescript','eslint','prettier','jest','vitest','mocha','chai','webpack','vite','rollup','esbuild','nodemon','ts-node','ts-jest'];
+        var typesInProd = deps.filter(function(d) { return d.startsWith('@types/'); });
+        var misplaced = deps.filter(function(d) { return devInProd.indexOf(d) !== -1; });
+        if (misplaced.length > 0 || typesInProd.length > 0) {
+          issues.push({ severity: 'medium', text: 'Dev dependencies in "dependencies": ' + misplaced.concat(typesInProd).join(', ') });
+        }
+
+        if (deps.length > 30) issues.push({ severity: 'medium', text: deps.length + ' production dependencies \u2014 check for unused ones' });
+        if (!scripts.build) issues.push({ severity: 'high', text: 'No "build" script' });
+        if (!scripts.start && !scripts.dev) issues.push({ severity: 'high', text: 'No "start" or "dev" script' });
+        if (!scripts.test || scripts.test.indexOf('no test specified') !== -1) issues.push({ severity: 'high', text: 'No test script \u2014 deploying without tests' });
+        if (!pkg.name) issues.push({ severity: 'low', text: 'Missing "name" field' });
+        if (!pkg.version) issues.push({ severity: 'low', text: 'Missing "version" field' });
+        if (!pkg.description) issues.push({ severity: 'low', text: 'Missing "description"' });
+        if (!pkg.license) issues.push({ severity: 'low', text: 'Missing "license"' });
+      } catch(e) {
+        issues.push({ severity: 'high', text: 'package.json is invalid JSON' });
+      }
+    }
+
+    function scanPackageJson() {
+      var input = document.getElementById('pkg-input').value.trim();
+      if (!input) {
+        var results = document.getElementById('scan-results');
+        results.classList.remove('hidden');
+        results.innerHTML = '<p class="text-red-400">Paste a valid package.json.</p>';
+        return;
+      }
+      var issues = [];
+      checkPackageJson(input, issues);
+      renderResults(issues, 'package.json scan');
+    }
+
+    async function scanGitHub() {
+      var input = document.getElementById('github-input').value.trim();
+      var results = document.getElementById('scan-results');
+      results.classList.remove('hidden');
+
+      var match = input.match(/github\.com\/([^\/]+)\/([^\/\s]+)/);
+      if (!match) {
+        results.innerHTML = '<p class="text-red-400">Paste a valid GitHub URL (e.g., https://github.com/user/repo)</p>';
+        return;
+      }
+
+      var owner = match[1];
+      var repoName = match[2].replace(/\.git$/, '');
+      results.innerHTML = '<p class="text-text-dim animate-pulse">Scanning ' + owner + '/' + repoName + '...</p>';
+
+      var issues = [];
+
+      async function fetchFile(path) {
+        var branches = ['main', 'master'];
+        for (var b = 0; b < branches.length; b++) {
+          try {
+            var res = await fetch('https://raw.githubusercontent.com/' + owner + '/' + repoName + '/' + branches[b] + '/' + path);
+            if (res.ok) return await res.text();
+          } catch(e) {}
+        }
+        return null;
+      }
+
+      var fetched = await Promise.all([
+        fetchFile('package.json'),
+        fetchFile('tsconfig.json'),
+        fetchFile('.gitignore'),
+        fetchFile('README.md')
+      ]);
+      var pkgRaw = fetched[0];
+      var tsconfig = fetched[1];
+      var gitignore = fetched[2];
+      var readme = fetched[3];
+
+      var hasCI = false;
+      try {
+        var ciRes = await fetch('https://api.github.com/repos/' + owner + '/' + repoName + '/contents/.github/workflows');
+        if (ciRes.ok) hasCI = true;
+      } catch(e) {}
+
+      if (!pkgRaw) {
+        issues.push({ severity: 'high', text: 'No package.json found' });
+      } else {
+        checkPackageJson(pkgRaw, issues);
+      }
+
+      if (!gitignore) {
+        issues.push({ severity: 'critical', text: 'No .gitignore file' });
+      } else {
+        if (gitignore.indexOf('node_modules') === -1) issues.push({ severity: 'high', text: 'node_modules not in .gitignore' });
+        if (gitignore.indexOf('.env') === -1) issues.push({ severity: 'critical', text: '.env not in .gitignore \u2014 secrets may be exposed' });
+      }
+
+      if (!readme) issues.push({ severity: 'medium', text: 'No README.md' });
+      if (!hasCI) issues.push({ severity: 'medium', text: 'No CI/CD configuration (.github/workflows/)' });
+
+      if (tsconfig) {
+        try {
+          var cleaned = tsconfig.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+          if (cleaned.indexOf('"strict": true') === -1 && cleaned.indexOf('"strict":true') === -1) {
+            issues.push({ severity: 'low', text: 'TypeScript strict mode not enabled' });
+          }
+        } catch(e) {}
+      }
+
+      renderResults(issues, owner + '/' + repoName);
     }
   </script>
 </Layout>
