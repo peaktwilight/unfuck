@@ -137,7 +137,7 @@ npx unfcked /path/to/your/project --badge
 
 Get a shields.io badge for your README:
 
-![unfuck score](https://img.shields.io/badge/unfuck_score-83%2F100-green)
+![unfcked score](https://img.shields.io/badge/unfcked_score-83%2F100-green)
 
 Paste the markdown into your README. Re-run after fixing issues to update your score.
 
