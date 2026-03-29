@@ -117,8 +117,11 @@ body {
 
 /* Hall of fame green glow on the 94 card */
 .hall-of-fame-glow {
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.15), 0 0 60px rgba(34, 197, 94, 0.08);
-  border-color: rgba(34, 197, 94, 0.3) !important;
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.25), 0 0 80px rgba(34, 197, 94, 0.12), 0 0 120px rgba(34, 197, 94, 0.06);
+  border-color: rgba(34, 197, 94, 0.4) !important;
+}
+.hall-of-fame-glow:hover {
+  box-shadow: 0 0 40px rgba(34, 197, 94, 0.35), 0 0 100px rgba(34, 197, 94, 0.18), 0 0 160px rgba(34, 197, 94, 0.08);
 }
 
 /* Verdict bars with gradient fills */
@@ -145,6 +148,21 @@ body {
 .verdict-bar-critical {
   background: linear-gradient(90deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.08) 100%);
   border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Verdict bar hover pulse */
+@keyframes verdictPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.verdict-bar-green:hover,
+.verdict-bar-low:hover,
+.verdict-bar-medium:hover,
+.verdict-bar-high:hover,
+.verdict-bar-critical:hover {
+  animation: verdictPulse 1.2s ease-in-out infinite;
+  cursor: default;
 }
 
 /* Pulsing DUMPSTER FIRE text */

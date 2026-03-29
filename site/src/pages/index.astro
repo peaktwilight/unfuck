@@ -41,7 +41,7 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
     <div class="relative z-10 text-center max-w-5xl mx-auto">
       <!-- Hero title with scan lines -->
       <div class="relative inline-block">
-        <h1 class="title-glow font-mono font-black text-[clamp(5rem,18vw,14rem)] leading-[0.85] tracking-tighter text-accent select-none mb-6">
+        <h1 class="title-glow font-mono font-black text-[clamp(3rem,15vw,14rem)] leading-[0.85] tracking-tighter text-accent select-none mb-6 max-w-[90vw]">
           unfuck
         </h1>
         <div class="scan-lines absolute inset-0 pointer-events-none"></div>
@@ -62,7 +62,7 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
             <span class="ml-2 text-xs text-text-dim font-mono">terminal</span>
           </div>
           <!-- Terminal body -->
-          <div class="p-5 font-mono text-sm leading-relaxed text-left" id="terminal">
+          <div class="p-3 sm:p-5 font-mono text-[11px] sm:text-sm leading-relaxed text-left" id="terminal">
             <div class="terminal-line text-text-dim" style="animation-delay: 0.2s">$ npx unfuck</div>
             <div class="terminal-line mt-3" style="animation-delay: 0.5s">
               <span class="text-text-dim">Project:</span> <span class="text-white font-semibold">my-app</span> <span class="text-text-dim">(Next.js)</span>
@@ -147,9 +147,9 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
     <h2 class="font-mono font-bold text-3xl md:text-5xl text-center mb-4 tracking-tight">What it catches</h2>
     <p class="text-text-dim text-center mb-16 text-lg">Every dumb mistake your AI pair programmer glossed over.</p>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       <!-- Critical -->
-      <div class="bg-bg-card border border-border rounded-xl p-6 hover:border-critical/40 transition-colors">
+      <div class="bg-bg-card border border-border rounded-xl p-6 hover:border-critical/40 transition-colors max-sm:border-l-4 max-sm:border-l-critical">
         <div class="flex items-center gap-2 mb-4">
           <ShieldAlert class="w-6 h-6 text-critical" />
           <h3 class="font-mono font-bold text-critical text-lg">Critical</h3>
@@ -164,7 +164,7 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
       </div>
 
       <!-- High -->
-      <div class="bg-bg-card border border-border rounded-xl p-6 hover:border-high/40 transition-colors">
+      <div class="bg-bg-card border border-border rounded-xl p-6 hover:border-high/40 transition-colors max-sm:border-l-4 max-sm:border-l-high">
         <div class="flex items-center gap-2 mb-4">
           <AlertTriangle class="w-6 h-6 text-high" />
           <h3 class="font-mono font-bold text-high text-lg">High</h3>
@@ -179,7 +179,7 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
       </div>
 
       <!-- Medium -->
-      <div class="bg-bg-card border border-border rounded-xl p-6 hover:border-medium/40 transition-colors">
+      <div class="bg-bg-card border border-border rounded-xl p-6 hover:border-medium/40 transition-colors max-sm:border-l-4 max-sm:border-l-medium">
         <div class="flex items-center gap-2 mb-4">
           <AlertCircle class="w-6 h-6 text-medium" />
           <h3 class="font-mono font-bold text-medium text-lg">Medium</h3>
@@ -192,7 +192,7 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
       </div>
 
       <!-- Low -->
-      <div class="bg-bg-card border border-border rounded-xl p-6 hover:border-low/40 transition-colors">
+      <div class="bg-bg-card border border-border rounded-xl p-6 hover:border-low/40 transition-colors max-sm:border-l-4 max-sm:border-l-low">
         <div class="flex items-center gap-2 mb-4">
           <Info class="w-6 h-6 text-low" />
           <h3 class="font-mono font-bold text-low text-lg">Low</h3>
@@ -215,7 +215,7 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
       <p class="text-text-dim text-center mb-12 text-lg">We ran unfuck on popular vibe-coded projects.</p>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <!-- 23 - Generic SaaS Starter -->
-        <div class="text-center p-6 bg-bg-card border border-border rounded-xl">
+        <div class="text-center p-6 bg-bg-card border border-border rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-black/40">
           <div class="font-mono text-4xl font-black text-critical">23</div>
           <div class="text-xs text-text-dim mt-1 font-semibold">Generic SaaS Starter</div>
           <div class="text-[10px] text-text-dim/50 font-mono mt-0.5">"my-saas-starter"</div>
@@ -240,7 +240,7 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
         </div>
 
         <!-- 41 - AI Chat Template -->
-        <div class="text-center p-6 bg-bg-card border border-border rounded-xl">
+        <div class="text-center p-6 bg-bg-card border border-border rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-black/40">
           <div class="font-mono text-4xl font-black text-high">41</div>
           <div class="text-xs text-text-dim mt-1 font-semibold">AI Chat Template</div>
           <div class="text-[10px] text-text-dim/50 font-mono mt-0.5">"ai-chat-template"</div>
@@ -265,7 +265,7 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
         </div>
 
         <!-- 58 - Vibe-Coded Todo -->
-        <div class="text-center p-6 bg-bg-card border border-border rounded-xl">
+        <div class="text-center p-6 bg-bg-card border border-border rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-black/40">
           <div class="font-mono text-4xl font-black text-medium">58</div>
           <div class="text-xs text-text-dim mt-1 font-semibold">Vibe-Coded Todo</div>
           <div class="text-[10px] text-text-dim/50 font-mono mt-0.5">"vibe-coded-todo"</div>
@@ -290,7 +290,7 @@ import { ShieldAlert, AlertTriangle, AlertCircle, Info, Wrench, BadgeCheck, File
         </div>
 
         <!-- 94 - Hand-Crafted With Love -->
-        <div class="text-center p-6 bg-bg-card border border-border rounded-xl hall-of-fame-glow relative">
+        <div class="text-center p-6 bg-bg-card border border-border rounded-xl hall-of-fame-glow relative transition-all duration-200 hover:scale-105">
           <div class="font-mono text-4xl font-black text-green">94</div>
           <div class="text-xs text-text-dim mt-1 font-semibold">Hand-Crafted With Love</div>
           <div class="text-[10px] text-text-dim/50 font-mono mt-0.5">"hand-crafted-with-love"</div>
