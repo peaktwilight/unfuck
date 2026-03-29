@@ -21,7 +21,7 @@ const SEVERITY_LABELS: Record<Severity, string> = {
   LOW: 'LOW (nice to have)',
 };
 
-function calcScore(issues: Issue[]): number {
+export function calcScore(issues: Issue[]): number {
   const penalties: Record<Severity, number> = { CRITICAL: 20, HIGH: 10, MEDIUM: 5, LOW: 2 };
   let score = 100;
   for (const issue of issues) {
